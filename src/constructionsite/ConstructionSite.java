@@ -13,6 +13,9 @@ public class ConstructionSite {
         // TODO code application logic here
         SiteGUI gui=new SiteGUI();
         gui.modalDialog("Congrats, you've won a tender!");
-        gui.updateGUI(gui.Money, gui.CaveDepth, false, false);
+//Переменные в вызове следующей функции должны извлекаться не из класса
+//SiteGUI, а из реализуещего логику класса        
+        gui.updateGUI(gui.Money, gui.MaxDepth-gui.CaveJob, 
+                (int)((gui.CaveJob/gui.MaxDepth)*100),false, false);
     }
 }

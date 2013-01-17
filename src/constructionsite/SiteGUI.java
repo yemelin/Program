@@ -6,10 +6,12 @@ package constructionsite;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 
 /**
@@ -19,11 +21,13 @@ import javax.swing.JTextField;
 public class SiteGUI extends JFrame {
     JTextField MoneyText,DepthText;
     JButton ShovelButton, DiggerButton;
+    JProgressBar pbar;
 
 //Этих глобальных переменных не должно быть в этом классе, отвечающем
 //только за интерфейс    
     int Money=10000, Prize=3000; 
-    float CaveDepth=10;
+    float CaveJob=10;  //Сколько еще нужно копать
+    float MaxDepth=CaveJob;
     int ShovelCost=20, DiggerCost=800;
     float ShovelDig=0.1f,DiggerDig=1f;
 //------------    
@@ -31,6 +35,7 @@ public class SiteGUI extends JFrame {
 //Инициализация текстовой информации о яме и деньгах        
         MoneyText=new JTextField("Money:");
         DepthText=new JTextField("Cave depth:");
+        pbar=new JProgressBar(JProgressBar.VERTICAL,0,100);
         MoneyText.setEditable(false);
         DepthText.setEditable(false);
         setLayout(new BorderLayout());
@@ -38,8 +43,12 @@ public class SiteGUI extends JFrame {
 //Инициализация кнопок        
         add ("North",MoneyText);
         add ("South",DepthText);
-        ShovelButton=new JButton("Shovel");
-        DiggerButton=new JButton("Excavator");
+        add ("Center", pbar);
+        ImageIcon ShovelIcon=createImageIcon("images/shovel.jpg","");
+        ImageIcon DiggerIcon=createImageIcon("images/excavator.jpg","");
+        ShovelButton=new JButton(ShovelIcon);       
+        DiggerButton=new JButton(DiggerIcon);
+        
         add ("East", ShovelButton);
         add ("West", DiggerButton);
 //Инициализация прослушивателей нажатия кнопок
@@ -67,41 +76,47 @@ public class SiteGUI extends JFrame {
 //классе, а здесь должна быть только ссылка на нее и обновление gui    
     void diggerButtonAction(){
         Money=Money-DiggerCost;
-        CaveDepth=CaveDepth-DiggerDig;
-        if ((CaveDepth>0) & (Money>=ShovelCost)){
-            updateGUI(Money, CaveDepth,Money<DiggerCost,Money<ShovelCost);
+        CaveJob=CaveJob-DiggerDig;
+        updateGUI(Money, MaxDepth-CaveJob,(int)((CaveJob/MaxDepth)*100),
+                    Money<DiggerCost,Money<ShovelCost);
+        if (CaveJob<=0) {
+            modalDialog("Congratulations, job's done!");
+            Money+=Prize;
+            updateGUI(Money, 0,true,true);
         }
         else {
-            if (CaveDepth<=0) {
-                modalDialog("Congratulations, job's done!");
-                Money+=Prize;
+            if (Money<ShovelCost) {
+                modalDialog("Game over");           
+                updateGUI(Money, 0,true,true);
             }
-            else
-            if (Money<ShovelCost) {modalDialog("Game over");}
-            updateGUI(Money, 0,true,true);
         }                
     }
     void shovelButtonAction(){ 
         Money=Money-ShovelCost;
-        CaveDepth=CaveDepth-ShovelDig;
-        if ((CaveDepth>0) & (Money>=ShovelCost)){
-            updateGUI(Money, CaveDepth,Money<DiggerCost,Money<ShovelCost);
+        CaveJob=CaveJob-ShovelDig;
+        updateGUI(Money, MaxDepth-CaveJob,(int)((CaveJob/MaxDepth)*100),
+                    Money<DiggerCost,Money<ShovelCost);        
+        if (CaveJob<=0) {
+            modalDialog("Congratulations, job's done!");
+            Money+=Prize;
+            updateGUI(Money, 0, 100, true,true);
         }
         else {
-            if (CaveDepth<=0) {
-                modalDialog("Congratulations, job's done!");
-                Money+=Prize;
+            if (Money<ShovelCost) {
+                modalDialog("Game over");
+                updateGUI(Money, 0, 100, true,true);                
             }
-            else
-            if (Money<ShovelCost) {modalDialog("Game over");}
-            updateGUI(Money, 0,true,true);
-        }                
+        }    
+                        
     }
     
 //----------------------------    
 //Отображение информации о деньгах и глубине ямы в соответствии с первыми двумя 
 //параметрами, установка кнопок в положения enabled/disabled в зависимости от 
-//соответствующих параметров boolean    
+//соответствующих параметров boolean
+//Старая версия, без значения для ПрогрессБара
+
+//TODO: Скопировать тело функции в перегруженную ниже, а эту - удалить    
     void updateGUI(int Money, float CaveDepth, boolean DiggerDisable, boolean ShovelDisable){
         MoneyText.setText("Money: "+Money+"$");
         DepthText.setText("Cave depth: "+CaveDepth+"m");
@@ -116,9 +131,20 @@ public class SiteGUI extends JFrame {
         }
         else {
             ShovelButton.setEnabled(true);
-        }                    
+        }
+//-----------------
+//Новая версия (временно перегруженная). См.выше + BarValue - значение
+//для ProgressBar        
     }
-
+    void updateGUI(int Money, float CaveDepth, int BarValue, 
+            boolean DiggerDisable, boolean ShovelDisable){
+        updateGUI(Money,CaveDepth,DiggerDisable,ShovelDisable);
+//Проверка нового значения ProgressBar и установка его         
+        if ((BarValue<=pbar.getMaximum()) & (BarValue>=pbar.getMinimum())) {
+            pbar.setValue(BarValue);
+        }
+        //        pbar.setValue((int)(((CaveDepth)/10)*100));
+    }
 //Вывод модального окна с текстом s и кнопкой OK    
     void modalDialog(String s){        
         final JDialog jd=new JDialog(this,true);        
@@ -132,5 +158,16 @@ public class SiteGUI extends JFrame {
         jd.add("Center",OKButton);
         jd.pack();
         jd.setVisible(true);
-    }    
+    }
+//Функция для задания иконки    
+    protected ImageIcon createImageIcon(String path,
+                                           String description) {
+    java.net.URL imgURL = getClass().getResource(path);
+    if (imgURL != null) {
+        return new ImageIcon(imgURL, description);
+    } else {
+        System.err.println("Couldn't find file: " + path);
+        return null;
+    }
+}
 }
