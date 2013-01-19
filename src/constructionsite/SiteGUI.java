@@ -1,5 +1,5 @@
 /*
- GUI для "Стройки".
+ GUI для игры "Стройка".
  */
 package constructionsite;
 
@@ -13,161 +13,123 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextField;
+//import javax.swing.text.AttributeSet;
 
 /**
  *
  * @author Vasily
  */
-public class SiteGUI extends JFrame {
-    JTextField MoneyText,DepthText;
+public final class SiteGUI extends JFrame {
+
+    GuiAttributes attributes = new GuiAttributes();
+    JTextField MoneyText, DepthText;
     JButton ShovelButton, DiggerButton;
     JProgressBar pbar;
 
-//Этих глобальных переменных не должно быть в этом классе, отвечающем
-//только за интерфейс    
-    int Money=10000, Prize=3000; 
-    float CaveJob=10;  //Сколько еще нужно копать
-    float MaxDepth=CaveJob;
-    int ShovelCost=20, DiggerCost=800;
-    float ShovelDig=0.1f,DiggerDig=1f;
 //------------    
-    SiteGUI(){
+    SiteGUI() {
 //Инициализация текстовой информации о яме и деньгах        
-        MoneyText=new JTextField("Money:");
-        DepthText=new JTextField("Cave depth:");
-        pbar=new JProgressBar(JProgressBar.VERTICAL,0,100);
+        MoneyText = new JTextField();
+        DepthText = new JTextField();
+        pbar = new JProgressBar(JProgressBar.VERTICAL, 0, 100);
         MoneyText.setEditable(false);
         DepthText.setEditable(false);
         setLayout(new BorderLayout());
 
 //Инициализация кнопок        
-        add ("North",MoneyText);
-        add ("South",DepthText);
-        add ("Center", pbar);
-        ImageIcon ShovelIcon=createImageIcon("images/shovel.jpg","");
-        ImageIcon DiggerIcon=createImageIcon("images/excavator.jpg","");
-        ShovelButton=new JButton(ShovelIcon);       
-        DiggerButton=new JButton(DiggerIcon);
-        
-        add ("East", ShovelButton);
-        add ("West", DiggerButton);
+        add("North", MoneyText);
+        add("South", DepthText);
+        add("Center", pbar);
+        ImageIcon ShovelIcon = createImageIcon("images/shovel.jpg", "");
+        ImageIcon DiggerIcon = createImageIcon("images/excavator.jpg", "");
+        ShovelButton = new JButton(ShovelIcon);
+        DiggerButton = new JButton(DiggerIcon);
+
+        add("East", ShovelButton);
+        add("West", DiggerButton);
 //Инициализация прослушивателей нажатия кнопок
-        ShovelButton.addActionListener(new ActionListener(){
-            public void actionPerformed(ActionEvent e){
-                shovelButtonAction();                                
+        ShovelButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                attributes.shovelButtonAction();
+                updateGUI(attributes);
             }
         });
-        DiggerButton.addActionListener(new ActionListener(){
-            public void actionPerformed(ActionEvent e){
-                diggerButtonAction();                
+        DiggerButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                attributes.diggerButtonAction();
+                updateGUI(attributes);
             }
         });
 //Инфо о стоимости и глубине разового копания отображается как ToolTip        
-        DiggerButton.setToolTipText("Dig 1m, cost 800");
-        ShovelButton.setToolTipText("Dig 0.1m, cost 20");                        
-        
+        DiggerButton.setToolTipText("Dig " + attributes.mechDigDepth + "m, cost " + attributes.mechDigCost + "$");
+        ShovelButton.setToolTipText("Dig " + attributes.nonmechDigDepth + "m, cost " + attributes.nonmechDigCost + "$");
+        updateGUI(attributes);
+
         pack();
         setVisible(true);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    }
-//-----------------------------------------------
-//Реакция на кнопки
-//Эти две функции должны быть переписаны. Логика должна реализовываться в другом
-//классе, а здесь должна быть только ссылка на нее и обновление gui    
-    void diggerButtonAction(){
-        Money=Money-DiggerCost;
-        CaveJob=CaveJob-DiggerDig;
-        updateGUI(Money, MaxDepth-CaveJob,(int)((CaveJob/MaxDepth)*100),
-                    Money<DiggerCost,Money<ShovelCost);
-        if (CaveJob<=0) {
-            modalDialog("Congratulations, job's done!");
-            Money+=Prize;
-            updateGUI(Money, 0,true,true);
-        }
-        else {
-            if (Money<ShovelCost) {
-                modalDialog("Game over");           
-                updateGUI(Money, 0,true,true);
-            }
-        }                
-    }
-    void shovelButtonAction(){ 
-        Money=Money-ShovelCost;
-        CaveJob=CaveJob-ShovelDig;
-        updateGUI(Money, MaxDepth-CaveJob,(int)((CaveJob/MaxDepth)*100),
-                    Money<DiggerCost,Money<ShovelCost);        
-        if (CaveJob<=0) {
-            modalDialog("Congratulations, job's done!");
-            Money+=Prize;
-            updateGUI(Money, 0, 100, true,true);
-        }
-        else {
-            if (Money<ShovelCost) {
-                modalDialog("Game over");
-                updateGUI(Money, 0, 100, true,true);                
-            }
-        }    
-                        
-    }
-    
-//----------------------------    
-//Отображение информации о деньгах и глубине ямы в соответствии с первыми двумя 
-//параметрами, установка кнопок в положения enabled/disabled в зависимости от 
-//соответствующих параметров boolean
-//Старая версия, без значения для ПрогрессБара
 
-//TODO: Скопировать тело функции в перегруженную ниже, а эту - удалить    
-    void updateGUI(int Money, float CaveDepth, boolean DiggerDisable, boolean ShovelDisable){
-        MoneyText.setText("Money: "+Money+"$");
-        DepthText.setText("Cave depth: "+CaveDepth+"m");
-        if (DiggerDisable) {
-            DiggerButton.setEnabled(false);
-        }
-        else {
-            DiggerButton.setEnabled(true);
-        }
-        if (ShovelDisable) {
-            ShovelButton.setEnabled(false);
-        }
-        else {
-            ShovelButton.setEnabled(true);
-        }
-//-----------------
-//Новая версия (временно перегруженная). См.выше + BarValue - значение
-//для ProgressBar        
     }
-    void updateGUI(int Money, float CaveDepth, int BarValue, 
-            boolean DiggerDisable, boolean ShovelDisable){
-        updateGUI(Money,CaveDepth,DiggerDisable,ShovelDisable);
+
+//----------------------------    
+//Отображение информации об атрибутах формы (деньги и глубина ямы (с отражением на прогрессбаре)) 
+//установка кнопок в положение disabled по окончании работы программы
+    void updateGUI(GuiAttributes attributes) {
+        MoneyText.setText("Money: " + attributes.money + "$");
+        DepthText.setText("Cave depth: " + attributes.caveDepth + "m");
+        DiggerButton.setEnabled(attributes.diggerEnable);
+        ShovelButton.setEnabled(attributes.shovelEnableJ);
 //Проверка нового значения ProgressBar и установка его         
-        if ((BarValue<=pbar.getMaximum()) & (BarValue>=pbar.getMinimum())) {
+        int BarValue = (int) (((attributes.startCaveJob - attributes.caveDepth) / attributes.startCaveJob) * 100);
+        if ((BarValue <= pbar.getMaximum()) & (BarValue >= pbar.getMinimum())) {
             pbar.setValue(BarValue);
         }
-        //        pbar.setValue((int)(((CaveDepth)/10)*100));
+        messenger();
     }
+//-----------------------------------------------
+
+    void messenger() {
+        if (attributes.result == GuiAttributes.Result.PLAYING) {
+        } else if (attributes.result == GuiAttributes.Result.NEW) {
+            modalDialog("Congrats, you've won a tender! Dig " + attributes.startCaveJob + "m cave for " + attributes.startMoney + "$.");
+            attributes.result = GuiAttributes.Result.PLAYING;
+        } else if (attributes.result == GuiAttributes.Result.WIN) {
+            modalDialog("Congratulations, job's done! Your profit: " + attributes.money + "$.");
+        } else if (attributes.result == GuiAttributes.Result.LOSE) {
+            modalDialog("Ran out of money! Job isn't done! See you in arbitrage.");
+        } else {
+            modalDialog("Error in " + this.getTitle());
+        }
+    }
+
+    //-----------------
 //Вывод модального окна с текстом s и кнопкой OK    
-    void modalDialog(String s){        
-        final JDialog jd=new JDialog(this,true);        
-        JButton OKButton=new JButton("OK");
-        jd.add("North",new JLabel(s));
-        OKButton.addActionListener(new ActionListener(){
-            public void actionPerformed(ActionEvent e){
+    void modalDialog(String s) {
+        final JDialog jd = new JDialog(this, true);
+        JButton OKButton = new JButton("OK");
+        jd.add("North", new JLabel(s));
+        OKButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
                 jd.dispose();
             }
         });
-        jd.add("Center",OKButton);
+        jd.add("Center", OKButton);
         jd.pack();
         jd.setVisible(true);
     }
-//Функция для задания иконки    
+
+    //Функция для задания иконки    
     protected ImageIcon createImageIcon(String path,
-                                           String description) {
-    java.net.URL imgURL = getClass().getResource(path);
-    if (imgURL != null) {
-        return new ImageIcon(imgURL, description);
-    } else {
-        System.err.println("Couldn't find file: " + path);
-        return null;
+            String description) {
+        java.net.URL imgURL = getClass().getResource(path);
+        if (imgURL != null) {
+            return new ImageIcon(imgURL, description);
+        } else {
+            System.err.println("Couldn't find file: " + path);
+            return null;
+        }
     }
-}
 }
