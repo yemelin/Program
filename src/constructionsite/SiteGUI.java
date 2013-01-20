@@ -11,6 +11,10 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 //import javax.swing.text.AttributeSet;
@@ -22,23 +26,29 @@ import javax.swing.JTextField;
 public final class SiteGUI extends JFrame {
 
     GuiAttributes attributes = new GuiAttributes();
-    JTextField MoneyText, DepthText;
+    JTextField MoneyText, DepthText, TimeText;
     JButton ShovelButton, DiggerButton;
     JProgressBar pbar;
 
 //------------    
     SiteGUI() {
 //Инициализация текстовой информации о яме и деньгах        
+        JPanel TextPanel=new JPanel();
+        TextPanel.setLayout(new BorderLayout());
         MoneyText = new JTextField();
         DepthText = new JTextField();
+        TimeText=new JTextField();
         pbar = new JProgressBar(JProgressBar.VERTICAL, 0, 100);
         MoneyText.setEditable(false);
         DepthText.setEditable(false);
+        TimeText.setEditable(false);
         setLayout(new BorderLayout());
 
 //Инициализация кнопок        
-        add("North", MoneyText);
-        add("South", DepthText);
+        TextPanel.add("North", MoneyText);
+        TextPanel.add("South", DepthText);
+        add("North", TextPanel);
+        add("South",TimeText);
         add("Center", pbar);
         ImageIcon ShovelIcon = createImageIcon("images/shovel.jpg", "");
         ImageIcon DiggerIcon = createImageIcon("images/excavator.jpg", "");
@@ -67,9 +77,25 @@ public final class SiteGUI extends JFrame {
         ShovelButton.setToolTipText("Dig " + attributes.nonmechDigDepth + "m, cost " + attributes.nonmechDigCost + "$");
         updateGUI(attributes);
 
+        JMenuBar menubar=new JMenuBar();
+        JMenu help=new JMenu("Help");
+        JMenuItem about=new JMenuItem("About");
+        
+        about.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent e){
+                modalDialog("ShYsoft inc.(c)");
+            }
+        });
+        
+        help.add(about);
+        menubar.add(help);        
+        setJMenuBar(menubar);
+        
         pack();
         setVisible(true);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        
+        new LocalTimer(300);
 
     }
 
@@ -130,6 +156,28 @@ public final class SiteGUI extends JFrame {
         } else {
             System.err.println("Couldn't find file: " + path);
             return null;
+        }
+    }
+//primitive timer    
+    class LocalTimer implements Runnable {
+        Thread t;
+        int time;
+        boolean running=true;
+        LocalTimer(int sec){
+            time=sec;
+            t=new Thread(this);
+            t.start();
+        }
+        public void run(){
+            while (running){
+                TimeText.setText(Integer.toString(time));
+                try {t.sleep(1000);}                
+                catch (InterruptedException e) {}
+                time--;
+            }
+        }
+        void stop(){
+            running=false;
         }
     }
 }
