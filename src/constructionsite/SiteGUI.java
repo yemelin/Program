@@ -3,6 +3,7 @@
  */
 package constructionsite;
 
+import constructionsite.Order.Stage;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,7 +18,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextField;
-//import javax.swing.text.AttributeSet;
 
 /**
  *
@@ -25,7 +25,10 @@ import javax.swing.JTextField;
  */
 public final class SiteGUI extends JFrame {
 
-    GuiAttributes attributes = new GuiAttributes();
+    Order order = new Order();                               // Экземпляр заказа (выигранного по тендеру)
+    Digger mechDigger = new Digger(new MechDigger());        // Экземпляр экскаватора, которым можно копать
+    Digger nonmechDigger = new Digger(new NonmechDigger());  // Экземпляр рабочего, который может копать
+    LocalTimer timer;    // Таймер обратного отсчета срока выполнения заказа
     JTextField MoneyText, DepthText, TimeText;
     JButton ShovelButton, DiggerButton;
     JProgressBar pbar;
@@ -33,11 +36,11 @@ public final class SiteGUI extends JFrame {
 //------------    
     SiteGUI() {
 //Инициализация текстовой информации о яме и деньгах        
-        JPanel TextPanel=new JPanel();
+        JPanel TextPanel = new JPanel();
         TextPanel.setLayout(new BorderLayout());
         MoneyText = new JTextField();
         DepthText = new JTextField();
-        TimeText=new JTextField();
+        TimeText = new JTextField();
         pbar = new JProgressBar(JProgressBar.VERTICAL, 0, 100);
         MoneyText.setEditable(false);
         DepthText.setEditable(false);
@@ -48,10 +51,10 @@ public final class SiteGUI extends JFrame {
         TextPanel.add("North", MoneyText);
         TextPanel.add("South", DepthText);
         add("North", TextPanel);
-        add("South",TimeText);
+        add("South", TimeText);
         add("Center", pbar);
-        ImageIcon ShovelIcon = createImageIcon("images/shovel.jpg", "");
-        ImageIcon DiggerIcon = createImageIcon("images/excavator.jpg", "");
+        ImageIcon ShovelIcon = createImageIcon(nonmechDigger.imageIconPath, "");
+        ImageIcon DiggerIcon = createImageIcon(mechDigger.imageIconPath, "");
         ShovelButton = new JButton(ShovelIcon);
         DiggerButton = new JButton(DiggerIcon);
 
@@ -61,76 +64,76 @@ public final class SiteGUI extends JFrame {
         ShovelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                attributes.shovelButtonAction();
-                updateGUI(attributes);
+                nonmechDigger.dig(order);
+                updateGUI();
             }
         });
         DiggerButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                attributes.diggerButtonAction();
-                updateGUI(attributes);
+                mechDigger.dig(order);
+                updateGUI();
             }
         });
 //Инфо о стоимости и глубине разового копания отображается как ToolTip        
-        DiggerButton.setToolTipText("Dig " + attributes.mechDigDepth + "m, cost " + attributes.mechDigCost + "$");
-        ShovelButton.setToolTipText("Dig " + attributes.nonmechDigDepth + "m, cost " + attributes.nonmechDigCost + "$");
-        updateGUI(attributes);
+        DiggerButton.setToolTipText(mechDigger.description);
+        ShovelButton.setToolTipText(nonmechDigger.description);
+        updateGUI();
 
-        JMenuBar menubar=new JMenuBar();
-        JMenu help=new JMenu("Help");
-        JMenuItem about=new JMenuItem("About");
-        
-        about.addActionListener(new ActionListener(){
-            public void actionPerformed(ActionEvent e){
+        JMenuBar menubar = new JMenuBar();
+        JMenu help = new JMenu("Help");
+        JMenuItem about = new JMenuItem("About");
+
+        about.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
                 modalDialog("ShYsoft inc.(c)");
             }
         });
-        
+
         help.add(about);
-        menubar.add(help);        
+        menubar.add(help);
         setJMenuBar(menubar);
-        
+
         pack();
         setVisible(true);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        
-        new LocalTimer(300);
+
+        timer = new LocalTimer();
 
     }
 
 //----------------------------    
 //Отображение информации об атрибутах формы (деньги и глубина ямы (с отражением на прогрессбаре)) 
-//установка кнопок в положение disabled по окончании работы программы
-    void updateGUI(GuiAttributes attributes) {
-        MoneyText.setText("Money: " + attributes.money + "$");
-        DepthText.setText("Cave depth: " + attributes.caveDepth + "m");
-        DiggerButton.setEnabled(attributes.diggerEnable);
-        ShovelButton.setEnabled(attributes.shovelEnableJ);
+//установка кнопок в положение disabled при нехватке денег и по окончании работы программы
+    void updateGUI() {
+        MoneyText.setText("Money: " + order.money + "$");
+        DepthText.setText("Cave depth: " + order.caveDepth + "m");
+        DiggerButton.setEnabled(mechDigger.isDiggingPossible(order));
+        ShovelButton.setEnabled(nonmechDigger.isDiggingPossible(order));
 //Проверка нового значения ProgressBar и установка его         
-        int BarValue = (int) (((attributes.startCaveJob - attributes.caveDepth) / attributes.startCaveJob) * 100);
+        int BarValue = (int) (((order.startCaveJob - order.caveDepth) / order.startCaveJob) * 100);
         if ((BarValue <= pbar.getMaximum()) & (BarValue >= pbar.getMinimum())) {
             pbar.setValue(BarValue);
         }
-        messenger();
-    }
-//-----------------------------------------------
-
-    void messenger() {
-        if (attributes.result == GuiAttributes.Result.PLAYING) {
-        } else if (attributes.result == GuiAttributes.Result.NEW) {
-            modalDialog("Congrats, you've won a tender! Dig " + attributes.startCaveJob + "m cave for " + attributes.startMoney + "$.");
-            attributes.result = GuiAttributes.Result.PLAYING;
-        } else if (attributes.result == GuiAttributes.Result.WIN) {
-            modalDialog("Congratulations, job's done! Your profit: " + attributes.money + "$.");
-        } else if (attributes.result == GuiAttributes.Result.LOSE) {
-            modalDialog("Ran out of money! Job isn't done! See you in arbitrage.");
+        Stage orderStage = order.getStage();
+        if (orderStage == Stage.PROCESSING) {
+        } else if (orderStage == Stage.NEW) {
+            modalDialog("Congrats, you've won a tender! Dig " + order.startCaveJob + "m cave for " + order.startMoney + "$.");
         } else {
-            modalDialog("Error in " + this.getTitle());
+            timer.stop();
+            DiggerButton.setEnabled(false);
+            ShovelButton.setEnabled(false);
+            if (orderStage == Stage.WIN) {
+                modalDialog("Congratulations, job's done! Your profit: " + order.money + "$.");
+            } else if (orderStage == Stage.LOSE) {
+                modalDialog("Job isn't done! See you in arbitrage.");
+            } else {
+                modalDialog("Error in " + this.getTitle());
+            }
         }
     }
 
-    //-----------------
+//-----------------
 //Вывод модального окна с текстом s и кнопкой OK    
     void modalDialog(String s) {
         final JDialog jd = new JDialog(this, true);
@@ -159,25 +162,33 @@ public final class SiteGUI extends JFrame {
         }
     }
 //primitive timer    
+
     class LocalTimer implements Runnable {
+
         Thread t;
-        int time;
-        boolean running=true;
-        LocalTimer(int sec){
-            time=sec;
-            t=new Thread(this);
+        boolean running = true;
+
+        LocalTimer() {
+            t = new Thread(this);
             t.start();
         }
-        public void run(){
-            while (running){
-                TimeText.setText(Integer.toString(time));
-                try {t.sleep(1000);}                
-                catch (InterruptedException e) {}
-                time--;
+
+        public void run() {
+            while (running && order.time >= 0) {
+                TimeText.setText(Integer.toString(order.time));
+                try {
+                    t.sleep(1000);
+                } catch (InterruptedException e) {
+                }
+                order.time--;
+            }
+            if (running) {
+                updateGUI();
             }
         }
-        void stop(){
-            running=false;
+
+        void stop() {
+            running = false;
         }
     }
 }
