@@ -79,27 +79,46 @@ public final class SiteGUI extends JFrame {
         DiggerButton.setToolTipText(mechDigger.description);
         ShovelButton.setToolTipText(nonmechDigger.description);
         updateGUI();
-
+        
+//Создание панели меню и отдельных меню
         JMenuBar menubar = new JMenuBar();
         JMenu help = new JMenu("Help");
         JMenuItem about = new JMenuItem("About");
 
         about.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent e) {               
                 modalDialog("ShYsoft inc.(c)");
             }
         });
-
         help.add(about);
+        
+        JMenu file = new JMenu("File");
+        JMenuItem newgame = new JMenuItem("New tender");
+
+        newgame.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {               
+                restart();
+            }
+        });
+        file.add(newgame);
+                
+        menubar.add(file);
         menubar.add(help);
         setJMenuBar(menubar);
-
+//----------------
         pack();
         setVisible(true);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         timer = new LocalTimer();
 
+    }
+    
+    void restart(){
+        timer.stop();
+        order.refresh();
+        updateGUI();
+        timer=new LocalTimer();
     }
 
 //----------------------------    
@@ -115,6 +134,7 @@ public final class SiteGUI extends JFrame {
         if ((BarValue <= pbar.getMaximum()) & (BarValue >= pbar.getMinimum())) {
             pbar.setValue(BarValue);
         }
+        
         Stage orderStage = order.getStage();
         if (orderStage == Stage.PROCESSING) {
         } else if (orderStage == Stage.NEW) {

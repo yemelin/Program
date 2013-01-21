@@ -45,8 +45,11 @@ public class Order {
     }
 
     void refresh() {
-
-        money = startMoney;     // Текущее количество денег
+        if (getStage()==Order.Stage.WIN){
+            money += startMoney;
+        }
+        else
+        {money = startMoney;}     // Текущее количество денег
         caveDepth = 0;        // Текущая глубина ямы
         time = startTime;       // Оставшееся время на выполнение заказа
 
