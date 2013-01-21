@@ -1,13 +1,13 @@
 /*
-Механизированный копатель ям (экскаватор)
-*/
+ Механизированный копатель ям (экскаватор)
+ */
 package constructionsite;
 
 /**
  *
  * @author eshibalkin
  */
-public class MechDigger extends CaveDigger{
+public class MechDigger extends CaveDigger {
 
     @Override
     public float getDigDepth() {
@@ -16,9 +16,9 @@ public class MechDigger extends CaveDigger{
 
     @Override
     public int getDigCost() {
-	return 800;
+        return 800;
     }
-    
+
     @Override
     public String getImageIconPath() {
         return "images/excavator.jpg";

@@ -1,9 +1,10 @@
 package constructionsite;
-/** Пример работы с функциями SiteGUI
+
+/**
+ * Пример работы с функциями SiteGUI
  *
  * @author Vasily
  */
-
 public class ConstructionSite {
 
     /**
@@ -11,6 +12,6 @@ public class ConstructionSite {
      */
     public static void main(String[] args) {
         // TODO code application logic here
-        SiteGUI gui=new SiteGUI();
+        SiteGUI gui = new SiteGUI();
     }
 }

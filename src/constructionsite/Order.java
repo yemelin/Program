@@ -10,7 +10,7 @@ package constructionsite;
 public class Order {
     // Константы для инициализации
 
-    final int startMoney = 3000;  // Сумма тендера, USD (сколько заплатят после выполнения работы)
+    final int startMoney = 5000;  // Сумма тендера, USD (сколько заплатят после выполнения работы)
     final int startCaveJob = 10;  // Объем работы, м (требуемая глубина ямы)
     final int startTime = 30;    // Время на выполнение заказа, мин
     // Переменные
@@ -43,5 +43,12 @@ public class Order {
             }
         }
     }
-    
+
+    void refresh() {
+
+        money = startMoney;     // Текущее количество денег
+        caveDepth = 0;        // Текущая глубина ямы
+        time = startTime;       // Оставшееся время на выполнение заказа
+
+    }
 }

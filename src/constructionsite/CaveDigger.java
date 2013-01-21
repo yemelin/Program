@@ -21,7 +21,7 @@ public abstract class CaveDigger {
         if (isDiggingPossible(attributes)) {
             attributes.money = attributes.money - getDigCost();
             // float precision handling
-            attributes.caveDepth = (float)(Math.round((attributes.caveDepth + getDigDepth())*10))/10;
+            attributes.caveDepth = (float) (Math.round((attributes.caveDepth + getDigDepth()) * 10)) / 10;
             // глубина должна быть не больше заказанной, а меньше 1раза оплачивается, как 1 раз
             if (attributes.caveDepth > attributes.startCaveJob) {
                 attributes.caveDepth = attributes.startCaveJob;
